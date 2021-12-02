@@ -15,6 +15,7 @@ Pmin = [0] * 10
 Pmax = [0] * 10
 E = [0] * 10
 
+# OLD Variables
 # P = numpy.zeros(shape=(10, 10))
 # K = [0] * 10
 # K = numpy.zeros(shape=(10, 10))
@@ -104,7 +105,6 @@ for i in range(200):
 
     for z in range(20):
         Econnected[z] = abs(sum(Pconnected[z]) - sum(ConnectedMatrices[z] * (Pconnected[z] ** 2)) - Pd)
-        # print("Epsilon osobnika | E[z] |", z, Econnected[z])
 
         # ------- for Children -------
         # P_Ch[x][y] = Pmin[x] + (Pmax[x] - Pmin[x]) * ((children[x][y] - 1) / 31)
@@ -141,18 +141,18 @@ for i in range(200):
         minFirstCost = min(KconnectedIndividual)
         print("\nFirst Epoch min configuration Cost:", minFirstCost)
         minFirstEpsilonSolution = min(Econnected)
-        print("Minimal First Epoch Epsiol =", minFirstEpsilonSolution)
+        print("Minimal First Epoch Epsilon =", minFirstEpsilonSolution)
 
     N = HelperMatrix
 
 print("\n\n\nThe final stage of the power plant operation")
 print(N)
 
-print("\nEpsioln list =", Econnected)
+print("\nEpsilon list =", Econnected)
 minEpsilonSolution = min(Econnected)
-print("Minimal Epsiol =", minEpsilonSolution)
+print("Minimal Epsilon =", minEpsilonSolution)
 minCost = min(KconnectedIndividual)
 print("Best Cost:", minCost)
 
-print("\nEpisilon Difference=", minFirstEpsilonSolution - minEpsilonSolution)
+print("\nEpsilon Difference=", minFirstEpsilonSolution - minEpsilonSolution)
 print("Cost Difference= ", minFirstCost - minCost)
