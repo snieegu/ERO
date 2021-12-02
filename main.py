@@ -92,7 +92,8 @@ for i in range(200):
     # print("mutationGene1= ", mutationGene1)
     mutationGene2 = random.randint(0, 9)
     # print("mutationGene2= ", mutationGene2)
-    childs[mutationGene1][mutationGene2] = random.randint(1, 32)
+    childs[mutationGene1][mutationGene2] = random.randint(1, 32)  # 1 / 100
+    childs[mutationGene2][mutationGene1] = random.randint(1, 32)  # 2 / 100
     # print(childs)
 
     # ------------- Connected matrices  & PERMUTATION -------------
@@ -200,14 +201,26 @@ for i in range(200):
 
     # print("wyjsciowe helperMatrix: \n", HelperMatrix)
 
+    if (i == 0):
+        minFirstCost = min(KconnectedIndividual)
+        print("\nFirst Epoch min configuration Cost:", minFirstCost)
+        minFirstEpsilonSolution = min(Econnected)
+        print("Minimal First Epoch Epsiol =", minFirstEpsilonSolution)
+
     N = HelperMatrix
     # sleep(3)
-    print("Epsilon osobnikow wyjsiowe", Econnected)
-    print("N wyjsciowe:\n", N)
+    # print("Epsilon osobnikow wyjsiowe", Econnected)
+    # print("N wyjsciowe:\n", N)
 
 print("\n\n\nThe final stage of the power plant operation")
 print(N)
 
-print("Epsioln list =", Econnected)
+print("\nEpsioln list =", Econnected)
 minEpsilonSolution = min(Econnected)
 print("Minimal Epsiol =", minEpsilonSolution)
+minCost = min(KconnectedIndividual)
+print("Best Cost:", minCost)
+
+
+print("\nEpisilon Difference=", minFirstEpsilonSolution - minEpsilonSolution)
+print("Cost Difference= ", minFirstCost - minCost)
