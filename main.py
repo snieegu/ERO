@@ -7,10 +7,13 @@ from time import sleep
 # ------------- Variables -------------
 
 Pd = 7500  # POWER DEMAND
+Epsilon = 100  # max loss
+Epoch = 100
 
 a = [0] * 10  # a factor
 b = [0] * 10  # b factor
 c = [0] * 10  # c factor
+S = [0] * 10  # S loss factor
 Pmin = [0] * 10
 Pmax = [0] * 10
 E = [0] * 10
@@ -23,12 +26,12 @@ E = [0] * 10
 # K_Ch = numpy.zeros(shape=(10, 10))
 
 Pconnected = numpy.zeros(shape=(20, 10))
+PconnectedAndSfactor = numpy.zeros(shape=(20, 10))
 Kconnected = numpy.zeros(shape=(20, 10))
 Econnected = [0] * 20
 KconnectedIndividual = [0] * 20
 
 N = numpy.random.randint(low=1, high=32, size=(10, 10), dtype=int)
-Epsilon = 100  # max loss
 
 # print("power Level Matrix \n", N)
 
@@ -36,13 +39,13 @@ for x in range(10):
     a[x] = random.uniform(2.5, 7.5)
     b[x] = random.uniform(2.5 * 10 ** -2, 7.5 * 10 ** -2)
     c[x] = random.uniform(2.5 * 10 ** -4, 7.5 * 10 ** -4)
+    S[x] = random.uniform(2.5 * 10 ** -6, 7.5 * 10 ** -6)
     Pmin[x] = random.randrange(250, 300)
     Pmax[x] = random.randrange(750, 1250)
-    # print("a", x, "=", a[x])
-    # print("b", x, "=", b[x])
-    # print("c", x, "=", c[x])
-    # print("Pmin", x, "=", Pmin[x])
-    # print("Pmax", x, "=", Pmax[x])
+
+# print("a=", a)
+# print("b=", b)
+# print("c=", c)
 
 children = numpy.zeros(shape=(10, 10))  # 10 x 10 children matrix
 
@@ -52,9 +55,9 @@ print("Power demand Pd= ", Pd)
 
 # ----------------------- LOOP ----------------------
 
-for i in range(200):
+for i in range(Epoch):
 
-    print("--------- EPOCH ", i, "---------")
+    # print("--------- EPOCH", i, "---------")
     HelperMatrix = numpy.zeros(shape=(0, 10))  # in the end used to copy connectedMatrices
 
     # ------------- Crossover -------------
@@ -76,7 +79,7 @@ for i in range(200):
     mutationGene2 = random.randint(0, 9)
 
     children[mutationGene1][mutationGene2] = random.randint(1, 32)  # 1 / 100
-    children[mutationGene2][mutationGene1] = random.randint(1, 32)  # 2 / 100
+    # children[mutationGene2][mutationGene1] = random.randint(1, 32)  # 2 / 100
 
     # ------------- Connected matrices  & PERMUTATION -------------
     ConnectedMatrices = np.concatenate((N, children))
@@ -97,18 +100,35 @@ for i in range(200):
 
     # ------------- Calculations for Connected Matrices-------------
 
+    # print("N=", ConnectedMatrices)
     for x in range(20):
         for y in range(10):
             # ------- for Parents ------
             Pconnected[x][y] = Pmin[y] + (Pmax[y] - Pmin[y]) * ((ConnectedMatrices[x][y] - 1) / 31)
             Kconnected[x][y] = a[y] + b[y] * Pconnected[x][y] + c[y] * (Pconnected[x][y] ** 2)
+            PconnectedAndSfactor[x][y] = ((Pconnected[x][y]) ** 2) * S[y]
+
+    if(i == 0):
+        print("Si factor", S)
+        print("Connected Matrices", sum(Pconnected))
+        print("PconnectedAndSfactor",PconnectedAndSfactor)
+
+    # if Epoch == 0:
+    #    print("SUM Si(Pi)^2", PconnectedAndSfactor)
+    # print(PconnectedAndSfactor)
+    # print("Pconnected = ",Pconnected)
+    # print("Connected Matrices= ", ConnectedMatrices)
 
     for z in range(20):
-        Econnected[z] = abs(sum(Pconnected[z]) - sum(ConnectedMatrices[z] * (Pconnected[z] ** 2)) - Pd)
+        Econnected[z] = abs(sum(Pconnected[z]) - sum(PconnectedAndSfactor[z]) - Pd)
 
-        # ------- for Children -------
-        # P_Ch[x][y] = Pmin[x] + (Pmax[x] - Pmin[x]) * ((children[x][y] - 1) / 31)
-        # K_Ch[x][y] = a[x] + b[x] * P_Ch[x][y] + c[x] * (P_Ch[x][y] ** 2)
+    # print("Epsilon = ", Econnected)
+    # print("Epsilon =", "sumaP[i] =", sum(Pconnected[z]), "sumaConnMatrix[i]= ",
+    #      sum(ConnectedMatrices[z]), "Pconnected[i]= ", sum(Pconnected[z]), "sumSiPi^2=",  sum(ConnectedMatrices[z] * (Pconnected[z] ** 2)) )
+
+    # ------- for Children -------
+    # P_Ch[x][y] = Pmin[x] + (Pmax[x] - Pmin[x]) * ((children[x][y] - 1) / 31)
+    # K_Ch[x][y] = a[x] + b[x] * P_Ch[x][y] + c[x] * (P_Ch[x][y] ** 2)
 
     for z in range(20):
         KconnectedIndividual[z] = sum(Kconnected[z])
@@ -123,7 +143,7 @@ for i in range(200):
     for z in range(0, 19, 2):
         # print("z =", z, "z + 1=", z + 1)
         if (Econnected[z] > Epsilon and Econnected[z + 1] > Epsilon):
-            if (KconnectedIndividual[z] > KconnectedIndividual[z + 1]):
+            if (Econnected[z] > Econnected[z + 1]):
                 HelperMatrix = np.vstack([HelperMatrix, ConnectedMatrices[z + 1]])
             else:
                 HelperMatrix = np.vstack([HelperMatrix, ConnectedMatrices[z]])
@@ -132,7 +152,7 @@ for i in range(200):
         elif Econnected[z] < Epsilon and Econnected[z + 1] > Epsilon:
             HelperMatrix = np.vstack([HelperMatrix, ConnectedMatrices[z]])
         elif Econnected[z] < Epsilon and Econnected[z + 1] < Epsilon:
-            if Econnected[z] < Econnected[z + 1]:
+            if KconnectedIndividual[z] < KconnectedIndividual[z + 1]:
                 HelperMatrix = np.vstack([HelperMatrix, ConnectedMatrices[z]])
             else:
                 HelperMatrix = np.vstack([HelperMatrix, ConnectedMatrices[z + 1]])
@@ -142,6 +162,10 @@ for i in range(200):
         print("\nFirst Epoch min configuration Cost:", minFirstCost)
         minFirstEpsilonSolution = min(Econnected)
         print("Minimal First Epoch Epsilon =", minFirstEpsilonSolution)
+
+    # print(HelperMatrix)
+    print("Epsilon Matrix", Econnected)
+    print("Min Epsilon = ", min(Econnected))
 
     N = HelperMatrix
 
